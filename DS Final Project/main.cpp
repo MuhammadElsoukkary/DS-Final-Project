@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <Windows.h>
-
+#include <conio.h>
 // Define a structure for the linked list node
 struct Node {
     wchar_t filename[256];
@@ -16,47 +16,44 @@ typedef struct {
     struct Node* Back;  // TAIL POINTER
 } Queue;
 
-//struct for stack//
-typedef struct Stack {
+// Stack
+typedef struct {
     int top;
-    int stack;
     int array[256];
-};
-struct StackNode
-{
-    int data;
-    struct StackNode* next;
-};
-
+} Stack;
 
 // Prototypes
 Queue* InitializeQueue(void);
 bool IsQueueEmpty(Queue* queue);
-struct Node* CreateNewNode(int data, char* name);
-void EnQueue(Queue* queue, int elementToInsert, char* name);
+struct Node* CreateNewNode(const wchar_t* filename);
+void EnQueue(Queue* queue, const wchar_t* filename);
+void addFile(struct Node** headRef, const char* filename);
+void play(struct Node* head);
+void freeList(struct Node* head);
 bool isEmpty(Stack* stack);
 int pop(Stack* stack);
 void push(Stack* stack, int data);
+
 // Create a new node
-struct Node* CreateNewNode(int data, char* name) {
+struct Node* CreateNewNode(const wchar_t* filename) {
     struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
     if (newNode == NULL) {
-        printf("No Memory");
+        fprintf(stderr, "Memory allocation failed\n");
         exit(EXIT_FAILURE);
     }
 
-    newNode->Name = name;
+    wcscpy_s(newNode->filename, 256, filename);
     newNode->next = NULL;
     return newNode;
 }
 
 // Put items on queue
-void EnQueue(Queue* queue, int elementToInsert, char* name) {
+void EnQueue(Queue* queue, const wchar_t* filename) {
     if (queue == NULL) {
         queue = InitializeQueue();
     }
 
-    struct Node* toEnqueue = CreateNewNode(elementToInsert, name);
+    struct Node* toEnqueue = CreateNewNode(filename);
     if (IsQueueEmpty(queue)) {
         queue->Front = toEnqueue;
         queue->Back = toEnqueue;
@@ -71,7 +68,7 @@ void EnQueue(Queue* queue, int elementToInsert, char* name) {
 Queue* InitializeQueue(void) {
     Queue* queue = (Queue*)malloc(sizeof(Queue));
     if (queue == NULL) {
-        printf("No Memory");
+        fprintf(stderr, "Memory allocation failed\n");
         exit(EXIT_FAILURE);
     }
 
@@ -90,7 +87,7 @@ void addFile(struct Node** headRef, const char* filename) {
     struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
     if (newNode == NULL) {
         fprintf(stderr, "Memory allocation failed\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     // Convert the filename to wide-character string
@@ -98,15 +95,10 @@ void addFile(struct Node** headRef, const char* filename) {
     if (MultiByteToWideChar(CP_UTF8, 0, filename, -1, wFilename, 256) == 0) {
         fprintf(stderr, "Failed to convert filename to wide-character string\n");
         free(newNode);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
-    if (wcscpy_s(newNode->filename, 256, wFilename) != 0) {
-        fprintf(stderr, "Failed to copy wide-character string\n");
-        free(newNode);
-        exit(1);
-    }
-
+    wcscpy_s(newNode->filename, 256, wFilename);
     newNode->next = NULL;
 
     if (*headRef == NULL) {
@@ -122,18 +114,42 @@ void addFile(struct Node** headRef, const char* filename) {
 }
 
 // Function to play the playlist
-void play(struct Node* head) {
+void play(struct Node* head, Stack* stack) {
     struct Node* current = head;
+    int currentIndex = 0; // Initialize index counter
+
     while (current != NULL) {
         printf("Playing: %ws\n", current->filename);
         if (PlaySoundW(current->filename, NULL, SND_FILENAME) == 0) {
             fprintf(stderr, "Failed to play audio file: %ws\n", current->filename);
             return;
         }
+
+        // Check for user input
+        if (_kbhit()) {
+            char userInput = _getch();
+            if (userInput == 'p' && !isEmpty(stack)) {
+                // Pause current song
+                PlaySound(NULL, NULL, SND_ASYNC);
+
+                // Play previous song
+                int prevIndex = pop(stack);
+                struct Node* prevSong = head;
+                // Traverse the playlist to find the previous song
+                for (int i = 0; i < prevIndex; i++) {
+                    prevSong = prevSong->next;
+                }
+                printf("Playing previous song: %ws\n", prevSong->filename);
+                PlaySoundW(prevSong->filename, NULL, SND_FILENAME);
+                continue; // Skip the increment step
+            }
+        }
+
+        push(stack, currentIndex); // Push the index onto the stack
         current = current->next;
+        currentIndex++; // Move to the next index
     }
 }
-
 
 
 // Function to free the memory allocated for the linked list
@@ -145,38 +161,38 @@ void freeList(struct Node* head) {
         free(temp);
     }
 }
-bool isEmpty(Stack* stack)
-{
-    return stack->top == NULL;
+
+// Check if the stack is empty
+bool isEmpty(Stack* stack) {
+    return stack->top == -1;
 }
+
+// Pop operation
 int pop(Stack* stack) {
-    if (isEmpty(stack))
-    {
-        printf("Error: stack underflow exception\n");
+    if (isEmpty(stack)) {
+        fprintf(stderr, "Error: stack underflow exception\n");
         exit(EXIT_FAILURE);
     }
-    return stack->array[stack->top];
-}
-void push(Stack* stack, int data)
-{
-    struct StackNode* newNode = (struct StackNode*)malloc(sizeof(struct Stack));
+    return stack->array[stack->top--];
 
-    if (newNode == NULL) {
-        printf("Memory allocation failed\n");
+}
+
+// Push operation
+void push(Stack* stack, int data) {
+    if (stack->top >= 255) {
+        fprintf(stderr, "Error: stack overflow\n");
         exit(EXIT_FAILURE);
     }
-    newNode->data = data;
-    newNode->data = stack->top;
-    stack->top = newNode;
+    stack->array[++stack->top] = data;
 }
-
 
 int main(void) {
     bool helper = false;
     struct Node* playlist = NULL;
+    Stack stack; // Initialize the stack
+    stack.top = -1; // Set top to -1 to indicate an empty stack
     int userInput = 0;
-    do
-    {
+    do {
         printf("Welcome to the music player 1050\n");
         printf("Pick an option\n");
         printf("1: Create a playlist\n");
@@ -186,46 +202,30 @@ int main(void) {
         printf("5: Delete playlist\n");
         printf("6: Play playlist on loop\n");
 
-        printf("Enter your choice:\n ");
+        printf("Enter your choice: ");
         scanf_s("%d", &userInput);
 
-
-        if (userInput == 1)
-        {
-            Queue* myQueue = InitializeQueue();
-        }
-        else if (userInput == 2) 
-        {
-
+        switch (userInput) {
+        case 1:
+            InitializeQueue();
+            break;
+        case 2:
             addFile(&playlist, "C:\\Users\\muham\\OneDrive\\Desktop\\DS Final Project\\AudioDB\\randomsound.wav");
-            //addFile(&playlist, "C:\\Users\\muham\\OneDrive\\Desktop\\DS Final Project\\DS Final Project\\randomsound2.wav");
-
-            
-        }
-        else if (userInput == 3)
-        {
-
-            play(playlist);
-            printf("Press p if you want the previous song");
-            if (userInput == 'p')
-            {
-                // pop code
-            }
-        }
-        else if (userInput == 4)
-        {
+            addFile(&playlist, "C:\\Users\muham\\OneDrive\\Desktop\\DS Final Project\\AudioDB\\dark - future - logo - 196217.wav");
+            break;
+        case 3:
+            play(playlist, &stack);
+            printf("If you want to go back to the previous song click p ");
+            break;
+        case 4:
             freeList(playlist);
-        }
-        else if (userInput == 5)
-        {
+            break;
+        case 5:
             freeList(playlist);
-        }
-        else if (userInput == 6)
-        {
+            break;
+        case 6:
             exit(EXIT_SUCCESS);
-        }
-        else
-        {
+        default:
             printf("Invalid option\n");
             return 1;
         }
