@@ -29,6 +29,24 @@ Node* CreateNewNode(int data, char* name) {
     return newNode;
 }
 
+// Put items on queue 
+void EnQueue(Queue* queue, int elementToInsert, char* name) {
+    if (queue == NULL) {
+        queue = InititalizeQueue();
+    }
+
+    Node* toEnqueue = CreateNewNode(elementToInsert, name);
+    if (IsQueueEmpty(queue)) {
+        queue->Front = toEnqueue;
+        queue->Back = toEnqueue;
+    }
+    else {
+        queue->Back->NextNode = toEnqueue;
+        queue->Back = toEnqueue;
+    }
+
+}
+
 // Function to add a file to the playlist
 // Function to add a file to the playlist
 void addFile(struct Node** headRef, const char* filename) {
