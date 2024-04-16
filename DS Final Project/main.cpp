@@ -3,6 +3,8 @@
 #include <stdbool.h>
 #include <Windows.h>
 #include <conio.h>
+#include <windows.h>  // Include Windows.h with lowercase 'w' for portability
+#include <wchar.h>    // Needed for wcscpy_s and wchar_t
 
 
 const int MAXFILENAMESIZE = 256;
@@ -32,6 +34,7 @@ struct CircularLinkedList {
     char* Name;
     struct CircularLinkedList* next;
     struct CircularLinkedList* head;
+    struct Node* current;
 };
 
 // Prototypes
@@ -39,8 +42,8 @@ Queue* InitializeQueue(void);
 bool IsQueueEmpty(Queue* queue);
 struct Node* CreateNewNode(const wchar_t* filename);
 void EnQueue(Queue* queue, const wchar_t* filename);
-void addFile(struct Node** headRef, const char* filename);
-void play(struct Node* head);
+void addFile(struct Node** headRef, struct CircularLinkedList** circularHeadRef, const char* filename);
+void play(struct Node* linkedList, struct CircularLinkedList* circularList, Stack* stack);
 void freeList(struct Node* head);
 bool isEmpty(Stack* stack);
 int pop(Stack* stack);
@@ -94,96 +97,110 @@ bool IsQueueEmpty(Queue* queue) {
     return queue->Front == NULL;
 }
 
+
+
 void addFile(struct Node** headRef, struct CircularLinkedList** circularHeadRef, const char* filename) {
-    struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
-    if (newNode == NULL) {
-        fprintf(stderr, "Memory allocation failed\n");
+    wchar_t wFilename[MAXFILENAMESIZE];
+    if (MultiByteToWideChar(CP_UTF8, 0, filename, -1, wFilename, MAXFILENAMESIZE) == 0) {
+        fprintf(stderr, "Failed to convert filename to wide-character string\n");
         exit(EXIT_FAILURE);
     }
 
     // Create a new node for the regular linked list
-    // Convert the filename to wide-character string
-    wchar_t wFilename[MAXFILENAMESIZE];
-    if (MultiByteToWideChar(CP_UTF8, 0, filename, -1, wFilename, MAXFILENAMESIZE) == 0) {
-        fprintf(stderr, "Failed to convert filename to wide-character string\n");
-        free(newNode);
-        exit(EXIT_FAILURE);
-    }
+    struct Node* newNode = CreateNewNode(wFilename);
 
-    wcscpy_s(newNode->filename, MAXFILENAMESIZE, wFilename);
-    newNode->next = NULL;
-
-    // Add the new node to the regular linked list
+    // Add the new node to the end of the regular linked list
     if (*headRef == NULL) {
-        *headRef = newNode;
+        *headRef = newNode; // If the list is empty, make the new node the head
     }
     else {
         struct Node* current = *headRef;
         while (current->next != NULL) {
             current = current->next;
         }
-        current->next = newNode;
+        current->next = newNode; // Add the new node to the end of the list
     }
 
-    // Create a new node for the circular linked list
-    struct CircularLinkedList* circularNewNode = (struct CircularLinkedList*)malloc(sizeof(struct CircularLinkedList));
-    if (circularNewNode == NULL) {
-        fprintf(stderr, "Memory allocation failed\n");
-        exit(EXIT_FAILURE);
+    // Create or update the circular linked list
+    if (*circularHeadRef == NULL) {
+        // If the circular linked list is empty, create the first node
+        *circularHeadRef = (struct CircularLinkedList*)malloc(sizeof(struct CircularLinkedList));
+        if (*circularHeadRef == NULL) {
+            fprintf(stderr, "Memory allocation failed\n");
+            exit(EXIT_FAILURE);
+        }
+        (*circularHeadRef)->current = newNode; // Point current to the new node
+        (*circularHeadRef)->next = *circularHeadRef; // Make it circular
     }
-
-    // Initialize the circular linked list node
-    wcscpy_s(circularNewNode->filename, MAXFILENAMESIZE, wFilename);
-    circularNewNode->next = *circularHeadRef; // Point to the current head of the circular linked list
-    *circularHeadRef = circularNewNode; // Update the head of the circular linked list
+    else {
+        // Find the last node in the circular linked list
+        struct CircularLinkedList* circularCurrent = *circularHeadRef;
+        while (circularCurrent->next != *circularHeadRef) {
+            circularCurrent = circularCurrent->next;
+        }
+        // Create a new circular node
+        struct CircularLinkedList* newCircularNode = (struct CircularLinkedList*)malloc(sizeof(struct CircularLinkedList));
+        if (newCircularNode == NULL) {
+            fprintf(stderr, "Memory allocation failed\n");
+            exit(EXIT_FAILURE);
+        }
+        newCircularNode->current = newNode; // Link it to the new regular node
+        newCircularNode->next = *circularHeadRef; // Maintain circular nature
+        circularCurrent->next = newCircularNode; // Insert it into the list
+    }
 }
 
-// Function to play the playlist
-void play(struct Node* linkedList, struct CircularLinkedList* circularList, Stack* stack) 
-{
-    CircularLinkedList* currentForCircle;
-    struct Node* current = linkedList->head; // Start with the regular linked list
-    int currentIndex = 0; // Initialize index counter
-    bool loop = true; // Variable to control the loop
 
-    while (loop) {
-        do {
-            printf("Playing: %ws\n", current->filename);
-            if (PlaySoundW(current->filename, NULL, SND_FILENAME) == 0) {
-                fprintf(stderr, "Failed to play audio file: %ws\n", current->filename);
-                return;
-            }
 
-            // Check for user input
-            if (_kbhit()) {
-                char userInput = _getch();
-                if (userInput == 'p' && !isEmpty(stack)) {
-                    // Pause current song
-                    PlaySound(NULL, NULL, SND_ASYNC);
 
-                    // Play previous song
-                    int prevIndex = pop(stack);
-                    struct Node* prevSong = linkedList->head; // Start with the regular linked list
-                    // Traverse the playlist to find the previous song
-                    for (int i = 0; i < prevIndex; i++) {
-                        prevSong = prevSong->next;
+
+void play(struct Node* linkedList, struct CircularLinkedList* circularList, Stack* stack) {
+    struct Node* current = linkedList; // Start with the regular linked list
+    struct CircularLinkedList* circularCurrent = circularList; // Handle to circular linked list
+    bool continuePlaying = true;
+    bool isLooping = false;
+
+    while (continuePlaying) {
+        printf("Playing: %ws\n", current->filename);
+        if (PlaySoundW(current->filename, NULL, SND_FILENAME) == 0) {
+            fprintf(stderr, "Failed to play audio file: %ws\n", current->filename);
+            return;
+        }
+
+        // Check for user input to toggle loop mode or quit
+        if (_kbhit()) {
+            char userInput = _getch();
+            switch (userInput) {
+            case 'p': // Previous song logic
+                // Implement stack logic to go back to the previous song
+                break;
+            case 'l': // Loop toggle
+                isLooping = !isLooping;
+                if (isLooping) {
+                    // Find the corresponding circular node to the current song
+                    while (circularCurrent->current != current && circularCurrent->next != circularList) {
+                        circularCurrent = circularCurrent->next;
                     }
-                    printf("Playing previous song: %ws\n", prevSong->filename);
-                    PlaySoundW(prevSong->filename, NULL, SND_FILENAME);
-                    continue; // Skip the increment step
                 }
-                else if (userInput == 'l') {
-                    // Use circular linked list if 'L' is pressed
-                    currentForCircle = current;
-                    break;
-                }
+                break;
             }
+        }
 
-            push(stack, currentIndex); // Push the index onto the stack
-            current = current->next; // Move to the next node
-            currentIndex++; // Move to the next index
-
-        } while (current != NULL && loop); // Continue until end of list or user quits
+        if (isLooping) {
+            // In loop mode, move through the circular linked list
+            circularCurrent = circularCurrent->next;
+            current = circularCurrent->current; // Sync regular list node with circular list node
+        }
+        else {
+            // Move to next song in the regular linked list
+            if (current->next != NULL) {
+                current = current->next;
+            }
+            else {
+                // Optionally stop playing at the end if not looping
+                continuePlaying = false;
+            }
+        }
     }
 }
 
@@ -245,12 +262,13 @@ int main(void) {
 
         switch (userInput) {
         case 1:
+            // Assuming InitializeQueue() is defined elsewhere
             InitializeQueue();
-            
             break;
         case 2:
-            addFile(&playlist, "C:\\Users\\muham\\OneDrive\\Desktop\\DS Final Project\\AudioDB\\randomsound.wav");
-            addFile(&playlist, "C:\\Users\muham\\OneDrive\\Desktop\\DS Final Project\\AudioDB\\dark - future - logo - 196217.wav");
+            // Assuming addFile() is defined elsewhere
+            addFile(&playlist, &roundPlaylist, "C:\\Users\\muham\\OneDrive\\Desktop\\DS Final Project\\AudioDB\\randomsound.wav");
+            addFile(&playlist, &roundPlaylist, "C:\\Users\\muham\\OneDrive\\Desktop\\DS Final Project\\AudioDB\\dark - future - logo - 196217.wav");
             break;
         case 3:
             play(playlist, roundPlaylist, &stack); // Assuming initially not using circular linked list
@@ -258,10 +276,10 @@ int main(void) {
             printf("If you start to fall in love with this playlist and want to put it on a loop press L\n");
             break;
         case 4:
-            freeList(playlist);
+            freeList(playlist); // Assuming freeList() is defined elsewhere
             break;
         case 5:
-            freeList(playlist);
+            freeList(playlist); // Assuming freeList() is defined elsewhere
             break;
         case 6:
             exit(EXIT_SUCCESS);
@@ -274,6 +292,7 @@ int main(void) {
 
     return 0;
 }
+
 
 
 
