@@ -2,11 +2,74 @@
 #include <stdlib.h>
 #include <Windows.h>
 
+//Queue
+typedef struct {
+    Node* Front; // HEAD POINTER
+    Node* Back; // TAIL POINTER
+} Queue;
+
+
 // Define a structure for the linked list node
 struct Node {
     wchar_t filename[256];
+    char* Name;
     struct Node* next;
 };
+
+// Prototypes //
+Queue* InititalizeQueue(void);
+bool IsQueueEmpty(Queue* queue);
+Node* CreateNewNode(int data, char* name);
+void EnQueue(Queue* queue, int elementToInsert, char* name);
+
+// Need to change parameters accordingly 
+Node* CreateNewNode(int data, char* name) {
+    Node* newNode = (Node*)malloc(sizeof(Node));
+    if (newNode == NULL) {
+        printf("No Memory");
+        exit(EXIT_FAILURE);
+    }
+
+    newNode->Name = name;
+    newNode->next = NULL;
+    return newNode;
+}
+
+// Put items on queue, NEED TO CHANGE PARAMETERSE QCCORDINGLY 
+void EnQueue(Queue* queue, int elementToInsert, char* name) {
+    if (queue == NULL) {
+        queue = InititalizeQueue();
+    }
+
+    Node* toEnqueue = CreateNewNode(elementToInsert, name);
+    if (IsQueueEmpty(queue)) {
+        queue->Front = toEnqueue;
+        queue->Back = toEnqueue;
+    }
+    else {
+        queue->Back->NextNode = toEnqueue;
+        queue->Back = toEnqueue;
+    }
+
+}
+
+// Initailize queue 
+Queue* InititalizeQueue(void) {
+    Queue* queue = (Queue*)malloc(sizeof(Queue));
+    if (queue == NULL) {
+        printf("No Memory");
+        exit(EXIT_FAILURE);
+    }
+
+    queue->Front = NULL;
+    queue->Back = NULL;
+    return queue;
+}
+
+// CHeck if the queue is empty 
+bool IsQueueEmpty(Queue* queue) {
+    return queue->Front == NULL;
+}
 
 // Function to add a file to the playlist
 // Function to add a file to the playlist
@@ -44,7 +107,6 @@ void addFile(struct Node** headRef, const char* filename) {
         current->next = newNode;
     }
 }
-
 
 // Function to play the playlist
 void play(struct Node* head) {
