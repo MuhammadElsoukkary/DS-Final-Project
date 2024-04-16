@@ -16,6 +16,19 @@ struct Node {
     struct Node* next;
 };
 
+// Need to change parameters accordingly 
+Node* CreateNewNode(int data, char* name) {
+    Node* newNode = (Node*)malloc(sizeof(Node));
+    if (newNode == NULL) {
+        printf("No Memory");
+        exit(EXIT_FAILURE);
+    }
+
+    newNode->Name = name;
+    newNode->next = NULL;
+    return newNode;
+}
+
 // Function to add a file to the playlist
 // Function to add a file to the playlist
 void addFile(struct Node** headRef, const char* filename) {
