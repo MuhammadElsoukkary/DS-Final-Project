@@ -3,11 +3,15 @@
 #include <stdbool.h>
 #include <Windows.h>
 #include <conio.h>
+
+
+const int MAXFILENAMESIZE = 256;
 // Define a structure for the linked list node
 struct Node {
-    wchar_t filename[256];
+    wchar_t filename[MAXFILENAMESIZE];
     char* Name;
     struct Node* next;
+    struct Node* head;
 };
 
 // Queue
@@ -19,8 +23,13 @@ typedef struct {
 // Stack
 typedef struct {
     int top;
-    int array[256];
+    int array[MAXFILENAMESIZE];
 } Stack;
+
+
+struct CircularLinkedList {
+    struct Node* head;
+};
 
 // Prototypes
 Queue* InitializeQueue(void);
@@ -42,7 +51,7 @@ struct Node* CreateNewNode(const wchar_t* filename) {
         exit(EXIT_FAILURE);
     }
 
-    wcscpy_s(newNode->filename, 256, filename);
+    wcscpy_s(newNode->filename, MAXFILENAMESIZE, filename);
     newNode->next = NULL;
     return newNode;
 }
@@ -92,13 +101,13 @@ void addFile(struct Node** headRef, const char* filename) {
 
     // Convert the filename to wide-character string
     wchar_t wFilename[256];
-    if (MultiByteToWideChar(CP_UTF8, 0, filename, -1, wFilename, 256) == 0) {
+    if (MultiByteToWideChar(CP_UTF8, 0, filename, -1, wFilename, MAXFILENAMESIZE) == 0) {
         fprintf(stderr, "Failed to convert filename to wide-character string\n");
         free(newNode);
         exit(EXIT_FAILURE);
     }
 
-    wcscpy_s(newNode->filename, 256, wFilename);
+    wcscpy_s(newNode->filename, MAXFILENAMESIZE, wFilename);
     newNode->next = NULL;
 
     if (*headRef == NULL) {
@@ -114,42 +123,54 @@ void addFile(struct Node** headRef, const char* filename) {
 }
 
 // Function to play the playlist
-void play(struct Node* head, Stack* stack) {
-    struct Node* current = head;
+void play(struct Node* linkedList, struct CircularLinkedList* circularList, Stack* stack) {
+    struct Node* current = linkedList->head; // Start with the regular linked list
     int currentIndex = 0; // Initialize index counter
+    bool loop = true; // Variable to control the loop
 
-    while (current != NULL) {
-        printf("Playing: %ws\n", current->filename);
-        if (PlaySoundW(current->filename, NULL, SND_FILENAME) == 0) {
-            fprintf(stderr, "Failed to play audio file: %ws\n", current->filename);
-            return;
-        }
-
-        // Check for user input
-        if (_kbhit()) {
-            char userInput = _getch();
-            if (userInput == 'p' && !isEmpty(stack)) {
-                // Pause current song
-                PlaySound(NULL, NULL, SND_ASYNC);
-
-                // Play previous song
-                int prevIndex = pop(stack);
-                struct Node* prevSong = head;
-                // Traverse the playlist to find the previous song
-                for (int i = 0; i < prevIndex; i++) {
-                    prevSong = prevSong->next;
-                }
-                printf("Playing previous song: %ws\n", prevSong->filename);
-                PlaySoundW(prevSong->filename, NULL, SND_FILENAME);
-                continue; // Skip the increment step
+    while (loop) {
+        do {
+            printf("Playing: %ws\n", current->filename);
+            if (PlaySoundW(current->filename, NULL, SND_FILENAME) == 0) {
+                fprintf(stderr, "Failed to play audio file: %ws\n", current->filename);
+                return;
             }
-        }
 
-        push(stack, currentIndex); // Push the index onto the stack
-        current = current->next;
-        currentIndex++; // Move to the next index
+            // Check for user input
+            if (_kbhit()) {
+                char userInput = _getch();
+                if (userInput == 'p' && !isEmpty(stack)) {
+                    // Pause current song
+                    PlaySound(NULL, NULL, SND_ASYNC);
+
+                    // Play previous song
+                    int prevIndex = pop(stack);
+                    struct Node* prevSong = linkedList->head; // Start with the regular linked list
+                    // Traverse the playlist to find the previous song
+                    for (int i = 0; i < prevIndex; i++) {
+                        prevSong = prevSong->next;
+                    }
+                    printf("Playing previous song: %ws\n", prevSong->filename);
+                    PlaySoundW(prevSong->filename, NULL, SND_FILENAME);
+                    continue; // Skip the increment step
+                }
+                else if (userInput == 'l') {
+                    // Use circular linked list if 'L' is pressed
+                    current = circularList->head;
+                    break;
+                }
+            }
+
+            push(stack, currentIndex); // Push the index onto the stack
+            current = current->next; // Move to the next node
+            currentIndex++; // Move to the next index
+
+        } while (current != NULL && loop); // Continue until end of list or user quits
     }
 }
+
+
+
 
 
 // Function to free the memory allocated for the linked list
@@ -189,6 +210,7 @@ void push(Stack* stack, int data) {
 int main(void) {
     bool helper = false;
     struct Node* playlist = NULL;
+    struct CircularLinkedList* roundPlaylist = NULL;
     Stack stack; // Initialize the stack
     stack.top = -1; // Set top to -1 to indicate an empty stack
     int userInput = 0;
@@ -200,22 +222,22 @@ int main(void) {
         printf("3: Play playlist\n");
         printf("4: Delete song in playlist\n");
         printf("5: Delete playlist\n");
-        printf("6: Play playlist on loop\n");
-
         printf("Enter your choice: ");
         scanf_s("%d", &userInput);
 
         switch (userInput) {
         case 1:
             InitializeQueue();
+           
             break;
         case 2:
             addFile(&playlist, "C:\\Users\\muham\\OneDrive\\Desktop\\DS Final Project\\AudioDB\\randomsound.wav");
             addFile(&playlist, "C:\\Users\muham\\OneDrive\\Desktop\\DS Final Project\\AudioDB\\dark - future - logo - 196217.wav");
             break;
         case 3:
-            play(playlist, &stack);
-            printf("If you want to go back to the previous song click p ");
+            play(playlist, roundPlaylist, &stack); // Assuming initially not using circular linked list
+            printf("If you want to go back to the previous song click p\n");
+            printf("If you start to fall in love with this playlist and want to put it on a loop press L\n");
             break;
         case 4:
             freeList(playlist);
