@@ -69,11 +69,11 @@ void freeList(struct Node* head) {
     }
 }
 
-int main() {
+int main(void) {
     struct Node* playlist = NULL;
 
     // Add files to the playlist
-    addFile(&playlist, "C:\\Users\\muham\\OneDrive\\Desktop\\DS Final Project\\DS Final Project\\randomsound1.wav");
+    addFile(&playlist, "C:\\Users\\muham\\OneDrive\\Desktop\\DS Final Project\\DS Final Project\\randomsound.wav");
     addFile(&playlist, "C:\\Users\\muham\\OneDrive\\Desktop\\DS Final Project\\DS Final Project\\randomsound2.wav");
 
     // Play the playlist
