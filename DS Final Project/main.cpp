@@ -35,7 +35,7 @@ Node* CreateNewNode(int data, char* name) {
     return newNode;
 }
 
-// Put items on queue 
+// Put items on queue, NEED TO CHANGE PARAMETERSE QCCORDINGLY 
 void EnQueue(Queue* queue, int elementToInsert, char* name) {
     if (queue == NULL) {
         queue = InititalizeQueue();
