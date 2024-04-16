@@ -181,7 +181,6 @@ char* SearchWithOverWriteInCaseOfCollisionTechnique(MusicPlayer* hashTable, int 
     return 0;
 }
 
-
 void addFile(struct Node** headRef, struct CircularLinkedList** circularHeadRef, const char* filename) {
     wchar_t wFilename[MAXFILENAMESIZE];
     if (MultiByteToWideChar(CP_UTF8, 0, filename, -1, wFilename, MAXFILENAMESIZE) == 0) {
@@ -199,43 +198,36 @@ void addFile(struct Node** headRef, struct CircularLinkedList** circularHeadRef,
     else {
         struct Node* current = *headRef;
         while (current->next != NULL) {
-            current = current->next;
+            current = current->next; // Traverse to the end of the list
         }
-        current->next = newNode; // Add the new node to the end of the list
+        current->next = newNode; // Append the new node at the end of the list
     }
 
     // Create or update the circular linked list
     if (*circularHeadRef == NULL) {
-        // If the circular linked list is empty, create the first node
         *circularHeadRef = (struct CircularLinkedList*)malloc(sizeof(struct CircularLinkedList));
         if (*circularHeadRef == NULL) {
             fprintf(stderr, "Memory allocation failed\n");
             exit(EXIT_FAILURE);
         }
-        (*circularHeadRef)->current = newNode; // Point current to the new node
+        (*circularHeadRef)->current = newNode;
         (*circularHeadRef)->next = *circularHeadRef; // Make it circular
     }
     else {
-        // Find the last node in the circular linked list
         struct CircularLinkedList* circularCurrent = *circularHeadRef;
         while (circularCurrent->next != *circularHeadRef) {
-            circularCurrent = circularCurrent->next;
+            circularCurrent = circularCurrent->next; // Find the last node
         }
-        // Create a new circular node
         struct CircularLinkedList* newCircularNode = (struct CircularLinkedList*)malloc(sizeof(struct CircularLinkedList));
         if (newCircularNode == NULL) {
             fprintf(stderr, "Memory allocation failed\n");
             exit(EXIT_FAILURE);
         }
-        newCircularNode->current = newNode; // Link it to the new regular node
+        newCircularNode->current = newNode;
         newCircularNode->next = *circularHeadRef; // Maintain circular nature
         circularCurrent->next = newCircularNode; // Insert it into the list
     }
 }
-
-
-
-
 
 void play(struct Node* linkedList, struct CircularLinkedList* circularList, Stack* stack) {
     struct Node* current = linkedList; // Start with the regular linked list
@@ -362,7 +354,7 @@ int main(void) {
             freeList(playlist); // Assuming freeList() is defined elsewhere
             break;
         case 5:
-            freeList(playlist); // Assuming freeList() is defined elsewhere
+            freeList(playlist);
             break;
         case 6:
             exit(EXIT_SUCCESS);
@@ -375,7 +367,6 @@ int main(void) {
 
     return 0;
 }
-
 
 
 
