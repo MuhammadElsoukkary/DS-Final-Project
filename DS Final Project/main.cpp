@@ -28,7 +28,10 @@ typedef struct {
 
 
 struct CircularLinkedList {
-    struct Node* head;
+    wchar_t filename[MAXFILENAMESIZE];
+    char* Name;
+    struct CircularLinkedList* next;
+    struct CircularLinkedList* head;
 };
 
 // Prototypes
@@ -91,16 +94,16 @@ bool IsQueueEmpty(Queue* queue) {
     return queue->Front == NULL;
 }
 
-// Function to add a file to the playlist
-void addFile(struct Node** headRef, const char* filename) {
+void addFile(struct Node** headRef, struct CircularLinkedList** circularHeadRef, const char* filename) {
     struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
     if (newNode == NULL) {
         fprintf(stderr, "Memory allocation failed\n");
         exit(EXIT_FAILURE);
     }
 
+    // Create a new node for the regular linked list
     // Convert the filename to wide-character string
-    wchar_t wFilename[256];
+    wchar_t wFilename[MAXFILENAMESIZE];
     if (MultiByteToWideChar(CP_UTF8, 0, filename, -1, wFilename, MAXFILENAMESIZE) == 0) {
         fprintf(stderr, "Failed to convert filename to wide-character string\n");
         free(newNode);
@@ -110,6 +113,7 @@ void addFile(struct Node** headRef, const char* filename) {
     wcscpy_s(newNode->filename, MAXFILENAMESIZE, wFilename);
     newNode->next = NULL;
 
+    // Add the new node to the regular linked list
     if (*headRef == NULL) {
         *headRef = newNode;
     }
@@ -120,10 +124,24 @@ void addFile(struct Node** headRef, const char* filename) {
         }
         current->next = newNode;
     }
+
+    // Create a new node for the circular linked list
+    struct CircularLinkedList* circularNewNode = (struct CircularLinkedList*)malloc(sizeof(struct CircularLinkedList));
+    if (circularNewNode == NULL) {
+        fprintf(stderr, "Memory allocation failed\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Initialize the circular linked list node
+    wcscpy_s(circularNewNode->filename, MAXFILENAMESIZE, wFilename);
+    circularNewNode->next = *circularHeadRef; // Point to the current head of the circular linked list
+    *circularHeadRef = circularNewNode; // Update the head of the circular linked list
 }
 
 // Function to play the playlist
-void play(struct Node* linkedList, struct CircularLinkedList* circularList, Stack* stack) {
+void play(struct Node* linkedList, struct CircularLinkedList* circularList, Stack* stack) 
+{
+    CircularLinkedList* currentForCircle;
     struct Node* current = linkedList->head; // Start with the regular linked list
     int currentIndex = 0; // Initialize index counter
     bool loop = true; // Variable to control the loop
@@ -156,7 +174,7 @@ void play(struct Node* linkedList, struct CircularLinkedList* circularList, Stac
                 }
                 else if (userInput == 'l') {
                     // Use circular linked list if 'L' is pressed
-                    current = circularList->head;
+                    currentForCircle = current;
                     break;
                 }
             }
@@ -228,7 +246,7 @@ int main(void) {
         switch (userInput) {
         case 1:
             InitializeQueue();
-           
+            
             break;
         case 2:
             addFile(&playlist, "C:\\Users\\muham\\OneDrive\\Desktop\\DS Final Project\\AudioDB\\randomsound.wav");
