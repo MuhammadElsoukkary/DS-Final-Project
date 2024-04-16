@@ -16,6 +16,12 @@ struct Node {
     struct Node* next;
 };
 
+// Prototypes //
+Queue* InititalizeQueue(void);
+bool IsQueueEmpty(Queue* queue);
+Node* CreateNewNode(int data, char* name);
+void EnQueue(Queue* queue, int elementToInsert, char* name);
+
 // Need to change parameters accordingly 
 Node* CreateNewNode(int data, char* name) {
     Node* newNode = (Node*)malloc(sizeof(Node));
@@ -45,6 +51,24 @@ void EnQueue(Queue* queue, int elementToInsert, char* name) {
         queue->Back = toEnqueue;
     }
 
+}
+
+// Initailize queue 
+Queue* InititalizeQueue(void) {
+    Queue* queue = (Queue*)malloc(sizeof(Queue));
+    if (queue == NULL) {
+        printf("No Memory");
+        exit(EXIT_FAILURE);
+    }
+
+    queue->Front = NULL;
+    queue->Back = NULL;
+    return queue;
+}
+
+// CHeck if the queue is empty 
+bool IsQueueEmpty(Queue* queue) {
+    return queue->Front == NULL;
 }
 
 // Function to add a file to the playlist
