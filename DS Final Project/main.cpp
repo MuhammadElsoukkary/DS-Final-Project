@@ -3,13 +3,6 @@
 #include <stdbool.h>
 #include <Windows.h>
 
-//Queue
-typedef struct {
-    Node* Front; // HEAD POINTER
-    Node* Back; // TAIL POINTER
-} Queue;
-
-
 // Define a structure for the linked list node
 struct Node {
     wchar_t filename[256];
@@ -17,23 +10,21 @@ struct Node {
     struct Node* next;
 };
 
+// Queue
+typedef struct {
+    struct Node* Front; // HEAD POINTER
+    struct Node* Back;  // TAIL POINTER
+} Queue;
 
-struct Song {
-    int songId;
-    struct Song* NextSong;
-};
-
-
-// Prototypes //
-Queue* InititalizeQueue(void);
+// Prototypes
+Queue* InitializeQueue(void);
 bool IsQueueEmpty(Queue* queue);
-Node* CreateNewNode(int data, char* name);
+struct Node* CreateNewNode(int data, char* name);
 void EnQueue(Queue* queue, int elementToInsert, char* name);
 
-
-// Need to change parameters accordingly 
-Node* CreateNewNode(int data, char* name) {
-    Node* newNode = (Node*)malloc(sizeof(Node));
+// Create a new node
+struct Node* CreateNewNode(int data, char* name) {
+    struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
     if (newNode == NULL) {
         printf("No Memory");
         exit(EXIT_FAILURE);
@@ -44,27 +35,25 @@ Node* CreateNewNode(int data, char* name) {
     return newNode;
 }
 
-// Put items on queue, NEED TO CHANGE PARAMETERSE QCCORDINGLY 
+// Put items on queue
 void EnQueue(Queue* queue, int elementToInsert, char* name) {
     if (queue == NULL) {
-        queue = InititalizeQueue();
+        queue = InitializeQueue();
     }
 
-    Node* toEnqueue = CreateNewNode(elementToInsert, name);
+    struct Node* toEnqueue = CreateNewNode(elementToInsert, name);
     if (IsQueueEmpty(queue)) {
         queue->Front = toEnqueue;
         queue->Back = toEnqueue;
     }
     else {
-        queue->Back->NextNode = toEnqueue;
+        queue->Back->next = toEnqueue;
         queue->Back = toEnqueue;
     }
-
 }
 
-
-// Initailize queue 
-Queue* InititalizeQueue(void) {
+// Initialize queue
+Queue* InitializeQueue(void) {
     Queue* queue = (Queue*)malloc(sizeof(Queue));
     if (queue == NULL) {
         printf("No Memory");
@@ -76,12 +65,11 @@ Queue* InititalizeQueue(void) {
     return queue;
 }
 
-// CHeck if the queue is empty 
+// Check if the queue is empty
 bool IsQueueEmpty(Queue* queue) {
     return queue->Front == NULL;
 }
 
-// Function to add a file to the playlist
 // Function to add a file to the playlist
 void addFile(struct Node** headRef, const char* filename) {
     struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
@@ -131,6 +119,8 @@ void play(struct Node* head) {
     }
 }
 
+
+
 // Function to free the memory allocated for the linked list
 void freeList(struct Node* head) {
     struct Node* current = head;
@@ -142,79 +132,69 @@ void freeList(struct Node* head) {
 }
 
 
-
-
-
-
-
-
-int main(void) 
-{
+int main(void) {
     bool helper = false;
     struct Node* playlist = NULL;
     int userInput = 0;
-
-    printf("Welcome to the music player 1050\n");
-    printf("Pick an option\n");
-    printf("1: Create a playlist\n");
-    printf("2: Add song to the playlist\n");
-    printf("3: Run through playlist\n");
-    printf("4: Delete song in playlist\n");
-    printf("5: Delete playlist\n");
-
-    printf("Enter your choice: ");
-    scanf("%d", &userInput);
-
-
-    if (userInput == 1) 
+    do
     {
-        
-    }
-    else if (userInput == 2) 
-    {
-        do
+        printf("Welcome to the music player 1050\n");
+        printf("Pick an option\n");
+        printf("1: Create a playlist\n");
+        printf("2: Add song to the playlist\n");
+        printf("3: Play playlist\n");
+        printf("4: Delete song in playlist\n");
+        printf("5: Delete playlist\n");
+        printf("6: Play playlist on loop\n");
+
+        printf("Enter your choice:\n ");
+        scanf_s("%d", &userInput);
+
+
+        if (userInput == 1)
         {
-            printf("Go to previous song");
-        }while (helper == false);
-        addFile(&playlist, "C:\\Users\\muham\\OneDrive\\Desktop\\DS Final Project\\AudioDB\\randomsound.wav");
-        addFile(&playlist, "C:\\Users\\muham\\OneDrive\\Desktop\\DS Final Project\\DS Final Project\\randomsound2.wav");
-    }
-
-    else if (userInput == 3) 
-    {
-        play(playlist);
-        do
+            Queue* myQueue = InitializeQueue();
+        }
+        else if (userInput == 2) 
         {
-            printf("Go to previous song");
-        } while (helper == false);
-    }
-    else if (userInput == 4) 
-    {
-        // Call function to delete song in playlist
-    }
-    else if (userInput == 5) 
-    {
-        freeList(playlist);
 
-    }
-   
-    else
-    {
-        printf("Invalid option\n");
-        return 1;
-    }
+            addFile(&playlist, "C:\\Users\\muham\\OneDrive\\Desktop\\DS Final Project\\AudioDB\\randomsound.wav");
+            //addFile(&playlist, "C:\\Users\\muham\\OneDrive\\Desktop\\DS Final Project\\DS Final Project\\randomsound2.wav");
 
-    // Add files to the playlist
-    addFile(&playlist, "C:\\Users\\muham\\OneDrive\\Desktop\\DS Final Project\\AudioDB\\randomsound.wav");
-    addFile(&playlist, "C:\\Users\\muham\\OneDrive\\Desktop\\DS Final Project\\DS Final Project\\randomsound2.wav");
+            
+        }
+        else if (userInput == 3)
+        {
 
-    // Play the playlist
-    play(playlist);
+            play(playlist);
+            printf("Press p if you want the previous song");
+            if (userInput == 'p')
+            {
+                // pop code
+            }
+        }
+        else if (userInput == 4)
+        {
+            freeList(playlist);
+        }
+        else if (userInput == 5)
+        {
+            freeList(playlist);
+        }
+        else if (userInput == 6)
+        {
+            exit(EXIT_SUCCESS);
+        }
+        else
+        {
+            printf("Invalid option\n");
+            return 1;
+        }
 
-    // Free memory allocated for the linked list
-    freeList(playlist);
+    } while (helper == false);
 
     return 0;
 }
+
 
 
