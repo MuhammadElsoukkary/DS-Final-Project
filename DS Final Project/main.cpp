@@ -1,7 +1,7 @@
 #include <iostream>
 #include <Windows.h>
 
-int main() {
+int main(void) {
     // Play the audio file using Windows Multimedia API
     printf("Playing right now\n");
     if (PlaySound(TEXT("C:\\Users\\muham\\OneDrive\\Desktop\\DS Final Project\\DS Final Project\\randomsound.wav"), NULL, SND_FILENAME) == 0) {
