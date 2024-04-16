@@ -108,7 +108,6 @@ void addFile(struct Node** headRef, const char* filename) {
     }
 }
 
-
 // Function to play the playlist
 void play(struct Node* head) {
     struct Node* current = head;
