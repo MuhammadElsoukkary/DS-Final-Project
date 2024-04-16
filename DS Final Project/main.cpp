@@ -2,13 +2,6 @@
 #include <stdlib.h>
 #include <Windows.h>
 
-// Queue 
-typedef struct Node {
-    int Data;
-    char* Name;
-    struct Node* NextNode;
-} Node;
-
 //Queue
 typedef struct {
     Node* Front; // HEAD POINTER
@@ -19,6 +12,7 @@ typedef struct {
 // Define a structure for the linked list node
 struct Node {
     wchar_t filename[256];
+    char* Name;
     struct Node* next;
 };
 
