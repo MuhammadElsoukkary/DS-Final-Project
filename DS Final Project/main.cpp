@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <Windows.h>
 
 //Queue
@@ -16,11 +17,19 @@ struct Node {
     struct Node* next;
 };
 
+
+struct Song {
+    int songId;
+    struct Song* NextSong;
+};
+
+
 // Prototypes //
 Queue* InititalizeQueue(void);
 bool IsQueueEmpty(Queue* queue);
 Node* CreateNewNode(int data, char* name);
 void EnQueue(Queue* queue, int elementToInsert, char* name);
+
 
 // Need to change parameters accordingly 
 Node* CreateNewNode(int data, char* name) {
@@ -52,6 +61,7 @@ void EnQueue(Queue* queue, int elementToInsert, char* name) {
     }
 
 }
+
 
 // Initailize queue 
 Queue* InititalizeQueue(void) {
@@ -133,8 +143,66 @@ void freeList(struct Node* head) {
 
 
 
-int main(void) {
+
+
+
+
+
+int main(void) 
+{
+    bool helper = false;
     struct Node* playlist = NULL;
+    int userInput = 0;
+
+    printf("Welcome to the music player 1050\n");
+    printf("Pick an option\n");
+    printf("1: Create a playlist\n");
+    printf("2: Add song to the playlist\n");
+    printf("3: Run through playlist\n");
+    printf("4: Delete song in playlist\n");
+    printf("5: Delete playlist\n");
+
+    printf("Enter your choice: ");
+    scanf("%d", &userInput);
+
+
+    if (userInput == 1) 
+    {
+        
+    }
+    else if (userInput == 2) 
+    {
+        do
+        {
+            printf("Go to previous song");
+        }while (helper == false);
+        addFile(&playlist, "C:\\Users\\muham\\OneDrive\\Desktop\\DS Final Project\\AudioDB\\randomsound.wav");
+        addFile(&playlist, "C:\\Users\\muham\\OneDrive\\Desktop\\DS Final Project\\DS Final Project\\randomsound2.wav");
+    }
+
+    else if (userInput == 3) 
+    {
+        play(playlist);
+        do
+        {
+            printf("Go to previous song");
+        } while (helper == false);
+    }
+    else if (userInput == 4) 
+    {
+        // Call function to delete song in playlist
+    }
+    else if (userInput == 5) 
+    {
+        freeList(playlist);
+
+    }
+   
+    else
+    {
+        printf("Invalid option\n");
+        return 1;
+    }
 
     // Add files to the playlist
     addFile(&playlist, "C:\\Users\\muham\\OneDrive\\Desktop\\DS Final Project\\AudioDB\\randomsound.wav");
