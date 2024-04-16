@@ -16,12 +16,27 @@ typedef struct {
     struct Node* Back;  // TAIL POINTER
 } Queue;
 
+//struct for stack//
+typedef struct Stack {
+    int top;
+    int stack;
+    int array[256];
+};
+struct StackNode
+{
+    int data;
+    struct StackNode* next;
+};
+
+
 // Prototypes
 Queue* InitializeQueue(void);
 bool IsQueueEmpty(Queue* queue);
 struct Node* CreateNewNode(int data, char* name);
 void EnQueue(Queue* queue, int elementToInsert, char* name);
-
+bool isEmpty(Stack* stack);
+int pop(Stack* stack);
+void push(Stack* stack, int data);
 // Create a new node
 struct Node* CreateNewNode(int data, char* name) {
     struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
@@ -129,6 +144,30 @@ void freeList(struct Node* head) {
         current = current->next;
         free(temp);
     }
+}
+bool isEmpty(Stack* stack)
+{
+    return stack->top == NULL;
+}
+int pop(Stack* stack) {
+    if (isEmpty(stack))
+    {
+        printf("Error: stack underflow exception\n");
+        exit(EXIT_FAILURE);
+    }
+    return stack->array[stack->top];
+}
+void push(Stack* stack, int data)
+{
+    struct StackNode* newNode = (struct StackNode*)malloc(sizeof(struct Stack));
+
+    if (newNode == NULL) {
+        printf("Memory allocation failed\n");
+        exit(EXIT_FAILURE);
+    }
+    newNode->data = data;
+    newNode->data = stack->top;
+    stack->top = newNode;
 }
 
 
