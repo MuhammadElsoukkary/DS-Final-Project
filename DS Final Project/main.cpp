@@ -84,6 +84,23 @@ Queue* InitializeQueue(void) {
 bool IsQueueEmpty(Queue* queue) {
     return queue->Front == NULL;
 }
+struct Node* makeCircular(struct Node** headRef) {
+    if (*headRef == NULL) return NULL; // If the list is empty, return NULL
+
+    struct Node* last = *headRef;
+
+    // Traverse to the end of the list
+    while (last->next != NULL) {
+        last = last->next;
+    }
+
+    // Link the last node back to the head to make the list circular
+    last->next = *headRef;
+
+    // Return the head of the list
+    return *headRef;
+}
+
 
 void addFile(struct Node** headRef, struct CircularLinkedList** circularHeadRef, const char* filename) {
     wchar_t wFilename[MAXFILENAMESIZE];
@@ -165,11 +182,19 @@ void play(struct Node* linkedList, Stack* stack) {
             continuePlaying = false;
         }
     }
+}
+
+void playCircular(struct Node* head, Stack* stack) {
+    if (head == NULL) {
+        printf("The playlist is empty.\n");
+        return;
+    }
 
     struct Node* current = head;
     bool continuePlaying = true;
 
-    do {
+    // Ensure we start the playback loop
+    while (continuePlaying) {
         printf("Playing: %ls\n", current->filename);
         if (PlaySoundW(current->filename, NULL, SND_FILENAME | SND_ASYNC) == 0) {
             fprintf(stderr, "Failed to play audio file: %ls\n", current->filename);
@@ -178,7 +203,8 @@ void play(struct Node* linkedList, Stack* stack) {
 
         push(stack, current);  // Save current node for possible "previous" action
 
-        if (_kbhit()) {
+        int loopCheck = 0; // A counter to prevent infinite loop on user input checks
+        while (_kbhit() && loopCheck < 5) {
             char userInput = _getch();
             switch (userInput) {
             case 'p':  // If 'p' is pressed, go to the previous song
@@ -188,7 +214,7 @@ void play(struct Node* linkedList, Stack* stack) {
                         current = pop(stack);  // Move to the previous song
                     }
                     else {
-                        printf("No previous song available.\n");
+                        printf("At the start of the playlist.\n");
                         push(stack, current);  // Re-push the current song since there's no previous
                     }
                 }
@@ -202,13 +228,14 @@ void play(struct Node* linkedList, Stack* stack) {
             default: // If other keys are pressed, do nothing
                 break;
             }
+            loopCheck++;
         }
 
         if (continuePlaying) {
             current = current->next;  // Move to the next song in the circular list
             Sleep(1000);  // Small delay to allow for keypresses and prevent CPU spike
         }
-    } while (continuePlaying && current != head);  // Loop until quit ('q' pressed) or full circle is reached
+    }
 }
 
 
@@ -267,9 +294,10 @@ void printCircularList(struct CircularLinkedList* head) {
 int main(void) {
     struct Node* playlist = NULL;
     struct CircularLinkedList* roundPlaylist = NULL;
-    Stack stack;
+    Stack stack{};
     stack.top = -1; // Initialize stack
     int userInput = 0;
+    char option = 'A';
 
     printf("Welcome to the music player 1050\n");
     while (true) {
@@ -284,8 +312,8 @@ int main(void) {
         switch (userInput) {
         case 1:
             freeList(playlist);
+            playlist = NULL;
             roundPlaylist = NULL;
-            Queue* playlist = InitializeQueue();       // Initializing Queue and setting the queue as the playlist
             printf("New playlist created. You can now add songs.\n");
             break;
         case 2:
@@ -300,19 +328,20 @@ int main(void) {
             else {
                 printf("Playing playlist...\n");
                 printf("You want your songs to loop press L\n");
+                printf("You want your songs to not loop press S\n");
                 scanf_s("%c", &option);
                 if (option == 'L')
                 {
-                    makeCircular(&playlist);
-                    playCircular(playlist,&stack);
+
+                    playCircular(makeCircular(&playlist), &stack);
                 }
-                else if(option == 'S')
+                else if (option == 'S')
                 {
                     play(playlist, &stack);
                 }
 
 
-          
+
             }
             break;
         case 4:
