@@ -333,7 +333,11 @@ int main(void) {
                 printf("Press 'L' for loop playback or 'S' for sequential playback.\n");
                 fflush(stdin); // Make sure the input buffer is clear
                 scanf_s("%c", &option);
-                if (option == 'L' || option == 'l') {
+                if (option == 'L' || option == 'l') 
+                {
+                    printf(
+                        "circle"
+                    );
                     makeCircular(&playlist); // Convert to circular
                     if (roundPlaylist == NULL) { // Check if roundPlaylist has been initialized
                         printf("No circular playlist available. Please add files and try again.\n");
