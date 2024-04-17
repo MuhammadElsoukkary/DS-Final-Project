@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -40,6 +41,7 @@ typedef struct MusicPlayerArtistSong {
 typedef struct MusicPlayer {
     MusicPlayerArtistSong* Table[10];
 } SongPlayer;
+
 
 Queue* InitializeQueue(void);
 bool IsQueueEmpty(Queue* queue);
@@ -99,9 +101,8 @@ Queue* InitializeQueue(void) {
 bool IsQueueEmpty(Queue* queue) {
     return queue->Front == NULL;
 }
-
-void makeCircular(struct Node** headRef) {
-    if (*headRef == NULL) return; // If the list is empty, do nothing
+struct Node* makeCircular(struct Node** headRef) {
+    if (*headRef == NULL) return NULL; // If the list is empty, return NULL
 
     struct Node* last = *headRef;
 
@@ -112,6 +113,9 @@ void makeCircular(struct Node** headRef) {
 
     // Link the last node back to the head to make the list circular
     last->next = *headRef;
+
+    // Return the head of the list
+    return *headRef;
 }
 
 
@@ -196,24 +200,25 @@ void play(struct Node* linkedList, Stack* stack) {
         }
     }
 }
-void playCircular(struct CircularLinkedList* head, Stack* stack) {
+
+void playCircular(struct Node* head, Stack* stack) {
     if (head == NULL) {
         printf("The playlist is empty.\n");
         return;
     }
 
-    struct CircularLinkedList* current = head;
+    struct Node* current = head;
     bool continuePlaying = true;
 
-    // Start the playback loop
-    do {
-        printf("Playing: %ls\n", current->current->filename);
-        if (PlaySoundW(current->current->filename, NULL, SND_FILENAME | SND_ASYNC) == 0) {
-            fprintf(stderr, "Failed to play audio file: %ls\n", current->current->filename);
+    // Ensure we start the playback loop
+    while (continuePlaying) {
+        printf("Playing: %ls\n", current->filename);
+        if (PlaySoundW(current->filename, NULL, SND_FILENAME | SND_ASYNC) == 0) {
+            fprintf(stderr, "Failed to play audio file: %ls\n", current->filename);
             continuePlaying = false; // Stop playing if an error occurs
         }
 
-        push(stack, current->current);  // Save current node for possible "previous" action
+        push(stack, current);  // Save current node for possible "previous" action
 
         int loopCheck = 0; // A counter to prevent infinite loop on user input checks
         while (_kbhit() && loopCheck < 5) {
@@ -223,16 +228,11 @@ void playCircular(struct CircularLinkedList* head, Stack* stack) {
                 if (!isEmpty(stack)) {
                     pop(stack); // Remove current song from stack first
                     if (!isEmpty(stack)) {
-                        struct Node* prevNode = pop(stack);
-                        // Find the corresponding CircularLinkedList node
-                        current = head;
-                        while (current->current != prevNode && current->next != head) {
-                            current = current->next;
-                        }
+                        current = pop(stack);  // Move to the previous song
                     }
                     else {
                         printf("At the start of the playlist.\n");
-                        push(stack, current->current);  // Re-push the current song since there's no previous
+                        push(stack, current);  // Re-push the current song since there's no previous
                     }
                 }
                 else {
@@ -252,63 +252,11 @@ void playCircular(struct CircularLinkedList* head, Stack* stack) {
             current = current->next;  // Move to the next song in the circular list
             Sleep(1000);  // Small delay to allow for keypresses and prevent CPU spike
         }
-    } while (continuePlaying && current != head);  // Loop until quit ('q' pressed) or full circle is reached
-}
-
-
-void freeList(struct Node* head) {
-    struct Node* current = head;
-    while (current != NULL) {
-        struct Node* temp = current;
-        current = current->next;
-        free(temp);
     }
 }
 
-bool isEmpty(Stack* stack) {
-    return stack->top == -1;
-}
 
-void push(Stack* stack, struct Node* node) {
-    if (stack->top < MAXFILENAMESIZE - 1) {
-        stack->top++;
-        stack->array[stack->top] = node;
-    }
-    else {
-        fprintf(stderr, "Stack full\n");
-    }
-}
 
-struct Node* pop(Stack* stack) {
-    if (!isEmpty(stack)) {
-        struct Node* node = stack->array[stack->top];
-        stack->top--;
-        return node;
-    }
-    else {
-        fprintf(stderr, "Stack is empty\n");
-        return NULL;
-    }
-}
-
-void printList(struct Node* head) {
-    struct Node* current = head;
-    while (current != NULL) {
-        printf("File: %ls\n", current->filename);
-        current = current->next;
-    }
-}
-
-void printCircularList(struct CircularLinkedList* head) {
-    if (head == NULL) return;
-    struct CircularLinkedList* current = head;
-    do {
-        printf("Circular File: %ls\n", current->current->filename);
-        current = current->next;
-    } while (current != head);
-}
-
-//generates the hash value
 int GenerateHash(int studentid) {
     int hash = 0;
 
@@ -376,10 +324,68 @@ char* SearchWithOverWriteInCaseOfCollisionTechnique(MusicPlayer* hashTable, int 
     printf("ERROR: cannot find the Key in the table!");
     return 0;
 }
+
+
+
+
+
+
+void freeList(struct Node* head) {
+    struct Node* current = head;
+    while (current != NULL) {
+        struct Node* temp = current;
+        current = current->next;
+        free(temp);
+    }
+}
+
+bool isEmpty(Stack* stack) {
+    return stack->top == -1;
+}
+
+void push(Stack* stack, struct Node* node) {
+    if (stack->top < MAXFILENAMESIZE - 1) {
+        stack->top++;
+        stack->array[stack->top] = node;
+    }
+    else {
+        fprintf(stderr, "Stack full\n");
+    }
+}
+
+struct Node* pop(Stack* stack) {
+    if (!isEmpty(stack)) {
+        struct Node* node = stack->array[stack->top];
+        stack->top--;
+        return node;
+    }
+    else {
+        fprintf(stderr, "Stack is empty\n");
+        return NULL;
+    }
+}
+
+void printList(struct Node* head) {
+    struct Node* current = head;
+    while (current != NULL) {
+        printf("File: %ls\n", current->filename);
+        current = current->next;
+    }
+}
+
+void printCircularList(struct CircularLinkedList* head) {
+    if (head == NULL) return;
+    struct CircularLinkedList* current = head;
+    do {
+        printf("Circular File: %ls\n", current->current->filename);
+        current = current->next;
+    } while (current != head);
+}
+
 int main(void) {
     struct Node* playlist = NULL;
     struct CircularLinkedList* roundPlaylist = NULL;
-    Stack stack;
+    Stack stack{};
     stack.top = -1; // Initialize stack
     int userInput = 0;
     char option = 'A';
@@ -397,19 +403,14 @@ int main(void) {
         switch (userInput) {
         case 1:
             freeList(playlist);
-            roundPlaylist = NULL;
             playlist = NULL;
+            roundPlaylist = NULL;
             printf("New playlist created. You can now add songs.\n");
             break;
         case 2:
-            if (playlist == NULL) {
-                printf("No Playlsit Is Found... Please Create a playlsit!!!\n");
-            }
-            else {
-                addFile(&playlist, &roundPlaylist, "C:\\Users\\muham\\source\\repos\\DS-Final-Project\\AudioDB\\Dark.wav");
-                addFile(&playlist, &roundPlaylist, "C:\\Users\\muham\\source\\repos\\DS-Final-Project\\AudioDB\\randomsound.wav");
-                printf("Songs added to the playlist.\n");
-            }
+            addFile(&playlist, &roundPlaylist, "C:\\Users\\muham\\source\\repos\\DS-Final-Project\\AudioDB\\Dark.wav");
+            addFile(&playlist, &roundPlaylist, "C:\\Users\\muham\\source\\repos\\DS-Final-Project\\AudioDB\\randomsound.wav");
+            printf("Songs added to the playlist.\n");
             break;
         case 3:
             if (playlist == NULL) {
@@ -417,28 +418,21 @@ int main(void) {
             }
             else {
                 printf("Playing playlist...\n");
-                printf("Press 'L' for loop playback or 'S' for sequential playback.\n");
-                fflush(stdin); // Make sure the input buffer is clear
+                printf("You want your songs to loop press L\n");
+                printf("You want your songs to not loop press S\n");
                 scanf_s("%c", &option);
-                if (option == 'L' || option == 'l') 
+                if (option == 'L')
                 {
-                    printf(
-                        "circle"
-                    );
-                    makeCircular(&playlist); // Convert to circular
-                    if (roundPlaylist == NULL) { // Check if roundPlaylist has been initialized
-                        printf("No circular playlist available. Please add files and try again.\n");
-                    }
-                    else {
-                        playCircular(roundPlaylist, &stack);
-                    }
+
+                    playCircular(makeCircular(&playlist), &stack);
                 }
-                else if (option == 'S' || option == 's') {
-                    play(playlist, &stack); // Play non-circular list
+                else if (option == 'S')
+                {
+                    play(playlist, &stack);
                 }
-                else {
-                    printf("Invalid option selected.\n");
-                }
+
+
+
             }
             break;
         case 4:
@@ -456,3 +450,4 @@ int main(void) {
     }
     return 0;
 }
+
