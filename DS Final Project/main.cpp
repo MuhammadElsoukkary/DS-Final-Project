@@ -31,6 +31,16 @@ struct CircularLinkedList {
     struct Node* current;
 };
 
+typedef struct MusicPlayerArtistSong {
+    int songId;
+    char* artistName[50];
+    struct MusicPlayerArtistSong* NextArtistSongPair;
+} MusicPlayerArtistSong;
+
+typedef struct MusicPlayer {
+    MusicPlayerArtistSong* Table[10];
+} SongPlayer;
+
 Queue* InitializeQueue(void);
 bool IsQueueEmpty(Queue* queue);
 struct Node* CreateNewNode(const wchar_t* filename);
@@ -43,6 +53,11 @@ struct Node* pop(Stack* stack);
 void push(Stack* stack, struct Node* node);
 void printList(struct Node* head);
 void printCircularList(struct CircularLinkedList* head);
+int GenerateHash(int studentid);
+MusicPlayerArtistSong* InitializeKeyValuePair(int songid, char* artist[50]);
+MusicPlayer* InitializeHashTable(void);
+void InsertWithOverWrite(MusicPlayer* hashTable, int songid, char* artist[50]);
+char* SearchWithOverWriteInCaseOfCollisionTechnique(MusicPlayer* hashTable, int songid);
 
 struct Node* CreateNewNode(const wchar_t* filename) {
     struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
@@ -293,6 +308,74 @@ void printCircularList(struct CircularLinkedList* head) {
     } while (current != head);
 }
 
+//generates the hash value
+int GenerateHash(int studentid) {
+    int hash = 0;
+
+    int asciiValue = studentid;
+    hash = (hash + asciiValue) % 10;
+
+    return hash;
+}
+
+//initializes the pair of the ID and Artist
+MusicPlayerArtistSong* InitializeKeyValuePair(int songid, char* artist[50]) {
+    MusicPlayerArtistSong* kvp = (MusicPlayerArtistSong*)malloc(sizeof(MusicPlayerArtistSong));
+    if (kvp == NULL) {
+        printf("EOM");
+        exit(EXIT_FAILURE);
+    }
+
+    kvp->songId = songid;
+    kvp->artistName[50] = artist[50];
+    kvp->NextArtistSongPair = NULL;
+    return kvp;
+}
+//initializes the hashtable
+MusicPlayer* InitializeHashTable(void) {
+    MusicPlayer* hashTable = (MusicPlayer*)malloc(sizeof(MusicPlayer));
+    if (hashTable == NULL) {
+        printf("EOM");
+        exit(EXIT_FAILURE);
+    }
+
+    for (int i = 0; i < 10; i++) {
+        hashTable->Table[i] = NULL;
+    }
+
+    return hashTable;
+}
+
+void InsertWithOverWrite(MusicPlayer* hashTable, int songid, char* artist[50]) {
+    MusicPlayerArtistSong* kvp = InitializeKeyValuePair(songid, artist);
+    int hash = GenerateHash(songid);
+
+    if (hashTable->Table[hash] == NULL) { //no collisions since the bucket is empty
+        hashTable->Table[hash] = kvp;
+        return;
+    }
+
+    //This means there is a collision, add the kvp to the head / tail of your linked list.
+    MusicPlayerArtistSong* current = hashTable->Table[hash];
+    free(current);
+    hashTable->Table[hash] = kvp;
+}
+
+char* SearchWithOverWriteInCaseOfCollisionTechnique(MusicPlayer* hashTable, int songid) {
+    int hash = GenerateHash(songid);
+
+    if (hashTable->Table[hash] == NULL) {
+        printf("ERROR: cannot find the Key in the table!");
+        return 0;
+    }
+
+    MusicPlayerArtistSong* current = hashTable->Table[hash];
+    if (current->songId == songid) {
+        return current->artistName[50];
+    }
+    printf("ERROR: cannot find the Key in the table!");
+    return 0;
+}
 int main(void) {
     struct Node* playlist = NULL;
     struct CircularLinkedList* roundPlaylist = NULL;
