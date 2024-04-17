@@ -191,7 +191,8 @@ void playCircular(struct Node* head, Stack* stack) {
     struct Node* current = head;
     bool continuePlaying = true;
 
-    do {
+    // Ensure we start the playback loop
+    while (continuePlaying) {
         printf("Playing: %ls\n", current->filename);
         if (PlaySoundW(current->filename, NULL, SND_FILENAME | SND_ASYNC) == 0) {
             fprintf(stderr, "Failed to play audio file: %ls\n", current->filename);
@@ -200,7 +201,8 @@ void playCircular(struct Node* head, Stack* stack) {
 
         push(stack, current);  // Save current node for possible "previous" action
 
-        if (_kbhit()) {
+        int loopCheck = 0; // A counter to prevent infinite loop on user input checks
+        while (_kbhit() && loopCheck < 5) {
             char userInput = _getch();
             switch (userInput) {
             case 'p':  // If 'p' is pressed, go to the previous song
@@ -210,7 +212,7 @@ void playCircular(struct Node* head, Stack* stack) {
                         current = pop(stack);  // Move to the previous song
                     }
                     else {
-                        printf("No previous song available.\n");
+                        printf("At the start of the playlist.\n");
                         push(stack, current);  // Re-push the current song since there's no previous
                     }
                 }
@@ -224,13 +226,14 @@ void playCircular(struct Node* head, Stack* stack) {
             default: // If other keys are pressed, do nothing
                 break;
             }
+            loopCheck++;
         }
 
         if (continuePlaying) {
             current = current->next;  // Move to the next song in the circular list
             Sleep(1000);  // Small delay to allow for keypresses and prevent CPU spike
         }
-    } while (continuePlaying && current != head);  // Loop until quit ('q' pressed) or full circle is reached
+    }
 }
 
 
@@ -323,6 +326,7 @@ int main(void) {
             else {
                 printf("Playing playlist...\n");
                 printf("You want your songs to loop press L\n");
+                printf("You want your songs to not loop press S\n");
                 scanf_s("%c", &option);
                 if (option == 'L')
                 {
