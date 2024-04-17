@@ -214,7 +214,7 @@ void playCircular(struct CircularLinkedList* head, Stack* stack) {
                         }
                     }
                     else {
-                        printf("At the start of the playlist.\n");
+                        printf("No previous song available.\n");
                         push(stack, current);  // Re-push the current song since there's no previous
                     }
                 }
@@ -234,7 +234,7 @@ void playCircular(struct CircularLinkedList* head, Stack* stack) {
             current = current->next;  // Move to the next song in the circular list
             Sleep(1000);  // Small delay to allow for keypresses and prevent CPU spike
         }
-    }
+    } while (continuePlaying && current != head);  // Loop until quit ('q' pressed) or full circle is reached
 }
 
 
@@ -334,7 +334,6 @@ int main(void) {
             else {
                 printf("Playing playlist...\n");
                 printf("You want your songs to loop press L\n");
-                printf("You want your songs to not loop press S\n");
                 scanf_s("%c", &option);
                 if (option == 'L' || option == 'l') 
                 {
