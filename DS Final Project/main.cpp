@@ -311,12 +311,11 @@ int main(void) {
         switch (userInput) {
         case 1:
             freeList(playlist);
-            playlist = NULL;
             roundPlaylist = NULL;
+            Queue* playlist = InitializeQueue();       // Initializing Queue and setting the queue as the playlist
             printf("New playlist created. You can now add songs.\n");
             break;
         case 2:
-
             if (playlist == NULL) {
                 printf("No Playlsit Is Found... Please Create a playlsit!!!\n");
             }
@@ -326,7 +325,6 @@ int main(void) {
                 printf("Songs added to the playlist.\n");
             }
             break;
-       
         case 3:
             if (playlist == NULL) {
                 printf("No songs in playlist. Add some songs first.\n");
@@ -356,7 +354,6 @@ int main(void) {
                 }
             }
             break;
-
         case 4:
             freeList(playlist);
             playlist = NULL;
