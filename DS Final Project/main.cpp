@@ -331,14 +331,6 @@ void playCircular(struct CircularLinkedList* circularList, Stack* stack) {
 }
 
 
-
-
-
-
-
-
-
-
 // Function to free the memory allocated for the linked list
 void freeList(struct Node* head) {
     struct Node* current = head;
@@ -393,6 +385,29 @@ void printCircularList(struct CircularLinkedList* head) {
 // Call these functions after all addFile calls
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 int main(void) {
     bool helper = false;
     struct Node* playlist = NULL;
@@ -437,6 +452,8 @@ int main(void) {
             freeList(playlist);
             break;
         case 7:
+            
+        case 8:
             exit(EXIT_SUCCESS);
         default:
             printf("Invalid option\n");
