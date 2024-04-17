@@ -314,9 +314,8 @@ int main(void) {
         switch (userInput) {
         case 1:
             freeList(playlist);
-            playlist = NULL;        // We never changed playlist so playlist is still NULL
             roundPlaylist = NULL;
-            InitializeQueue();
+            Queue* playlist = InitializeQueue();       // Initializing Queue and setting the queue as the playlist
             printf("New playlist created. You can now add songs.\n");
             break;
         case 2:
