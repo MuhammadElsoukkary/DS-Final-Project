@@ -122,7 +122,7 @@ struct Node* makeCircular(struct Node** headRef) {
 void addFile(struct Node** headRef, struct CircularLinkedList** circularHeadRef, const char* filename) {
     wchar_t wFilename[MAXFILENAMESIZE];
     if (MultiByteToWideChar(CP_UTF8, 0, filename, -1, wFilename, MAXFILENAMESIZE) == 0) {
-        fprintf(stderr, "Failed to convert filename to wide-character string\n");
+        printf("Failed to convert filename to wide-character string\n");
         exit(EXIT_FAILURE);
     }
 
@@ -147,14 +147,15 @@ void addFile(struct Node** headRef, struct CircularLinkedList** circularHeadRef,
         (*circularHeadRef)->current = newNode;
         (*circularHeadRef)->next = *circularHeadRef;
     }
-    else {
+    else
+    {
         struct CircularLinkedList* circularCurrent = *circularHeadRef;
         while (circularCurrent->next != *circularHeadRef) {
             circularCurrent = circularCurrent->next;
         }
         struct CircularLinkedList* newCircularNode = (struct CircularLinkedList*)malloc(sizeof(struct CircularLinkedList));
         if (newCircularNode == NULL) {
-            fprintf(stderr, "Memory allocation failed\n");
+            printf("Memory allocation failed\n");
             exit(EXIT_FAILURE);
         }
         newCircularNode->current = newNode;
@@ -176,20 +177,30 @@ void play(struct Node* linkedList, Stack* stack) {
 
         if (_kbhit()) {
             char userInput = _getch();
-            switch (userInput) {
+            switch (userInput)
+            {
             case 'p':
-                if (!isEmpty(stack)) {
+                if (!isEmpty(stack))
+                {
                     struct Node* prev = pop(stack);
-                    if (prev != NULL) {
+                    if (prev != NULL)
+                    {
                         current = prev;
                     }
-                    else {
+                    else
+                    {
                         printf("No previous song available.\n");
                     }
                 }
+
+
+            case 'q':  // Stop playing code
+                continuePlaying = false;
+                break;
+            default: // If other keys are pressed, do nothing
                 break;
             }
-        }
+            }
 
         if (current->next != NULL) {
             push(stack, current);
@@ -235,11 +246,12 @@ void playCircular(struct Node* head, Stack* stack) {
                         push(stack, current);  // Re-push the current song since there's no previous
                     }
                 }
-                else {
+                else 
+                {
                     printf("No previous song available.\n");
                 }
                 break;
-            case 'q':  // Let's add an option to quit playback
+            case 'q':  // Stop playing code
                 continuePlaying = false;
                 break;
             default: // If other keys are pressed, do nothing
@@ -327,9 +339,6 @@ char* SearchWithOverWriteInCaseOfCollisionTechnique(MusicPlayer* hashTable, int 
 
 
 
-
-
-
 void freeList(struct Node* head) {
     struct Node* current = head;
     while (current != NULL) {
@@ -373,11 +382,12 @@ void printList(struct Node* head) {
     }
 }
 
-void printCircularList(struct CircularLinkedList* head) {
+void printCircularList(struct Node* head)
+{
     if (head == NULL) return;
-    struct CircularLinkedList* current = head;
+    struct Node* current = head;
     do {
-        printf("Circular File: %ls\n", current->current->filename);
+        printf("Circular File: %ls\n", current->filename);
         current = current->next;
     } while (current != head);
 }
@@ -395,8 +405,9 @@ int main(void) {
         printf("1: Create a playlist\n");
         printf("2: Add song to the playlist\n");
         printf("3: Play playlist\n");
-        printf("4: Delete playlist\n");
-        printf("5: Exit\n");
+        printf("4: Print the lists\n");
+        printf("5: Delete playlist\n");
+        printf("6: Exit\n");
         printf("Enter your choice: ");
         scanf_s("%d", &userInput);
 
@@ -425,27 +436,41 @@ int main(void) {
                 scanf_s("%c", &option);
                 if (option == 'L')
                 {
-
+                    
+                    printf("If your getting tired of the songs press q to exit\n");
+                    printf("If you love the last song press p to go back to it\n");
                     playCircular(makeCircular(&playlist), &stack);
+                    
+               
                 }
                 else if (option == 'S')
                 {
+                    printf("If your getting tired of the songs press q to exit\n");
+                    printf("If you love the last song press p to go back to it\n");
                     play(playlist, &stack);
+                 
                 }
 
 
 
             }
             break;
+
         case 4:
+
+            printList(playlist);
+            printCircularList(makeCircular(&playlist));
+
+            
+        case 5:
+
             freeList(playlist);
-            playlist = NULL;
-            roundPlaylist = NULL;
+            
             printf("Playlist deleted.\n");
             break;
-        case 5:
+        case 6:
             freeList(playlist);
-            return 0;
+            exit(EXIT_SUCCESS);
         default:
             printf("Invalid option. Please try again.\n");
         }
