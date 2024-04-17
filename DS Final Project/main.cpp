@@ -319,7 +319,6 @@ int main(void) {
             printf("New playlist created. You can now add songs.\n");
             break;
         case 2:
-
             if (playlist == NULL) {
                 printf("No Playlsit Is Found... Please Create a playlsit!!!\n");
             }
@@ -329,7 +328,6 @@ int main(void) {
                 printf("Songs added to the playlist.\n");
             }
             break;
-       
         case 3:
             if (playlist == NULL) {
                 printf("No songs in playlist. Add some songs first.\n");
@@ -360,7 +358,6 @@ int main(void) {
                 }
             }
             break;
-
         case 4:
             freeList(playlist);
             playlist = NULL;
