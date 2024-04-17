@@ -190,18 +190,16 @@ void playCircular(struct CircularLinkedList* head, Stack* stack) {
     struct CircularLinkedList* current = head;
     bool continuePlaying = true;
 
-    // Start the playback loop
     do {
-        printf("Playing: %ls\n", current->current->filename);
-        if (PlaySoundW(current->current->filename, NULL, SND_FILENAME | SND_ASYNC) == 0) {
-            fprintf(stderr, "Failed to play audio file: %ls\n", current->current->filename);
+        printf("Playing: %ls\n", current->filename);
+        if (PlaySoundW(current->filename, NULL, SND_FILENAME | SND_ASYNC) == 0) {
+            fprintf(stderr, "Failed to play audio file: %ls\n", current->filename);
             continuePlaying = false; // Stop playing if an error occurs
         }
 
         push(stack, current->current);  // Save current node for possible "previous" action
 
-        int loopCheck = 0; // A counter to prevent infinite loop on user input checks
-        while (_kbhit() && loopCheck < 5) {
+        if (_kbhit()) {
             char userInput = _getch();
             switch (userInput) {
             case 'p':  // If 'p' is pressed, go to the previous song
@@ -217,7 +215,7 @@ void playCircular(struct CircularLinkedList* head, Stack* stack) {
                     }
                     else {
                         printf("At the start of the playlist.\n");
-                        push(stack, current->current);  // Re-push the current song since there's no previous
+                        push(stack, current);  // Re-push the current song since there's no previous
                     }
                 }
                 else {
@@ -230,14 +228,13 @@ void playCircular(struct CircularLinkedList* head, Stack* stack) {
             default: // If other keys are pressed, do nothing
                 break;
             }
-            loopCheck++;
         }
 
         if (continuePlaying) {
             current = current->next;  // Move to the next song in the circular list
             Sleep(1000);  // Small delay to allow for keypresses and prevent CPU spike
         }
-    } while (continuePlaying && current != head);  // Loop until quit ('q' pressed) or full circle is reached
+    }
 }
 
 
@@ -336,8 +333,8 @@ int main(void) {
             }
             else {
                 printf("Playing playlist...\n");
-                printf("Press 'L' for loop playback or 'S' for sequential playback.\n");
-                fflush(stdin); // Make sure the input buffer is clear
+                printf("You want your songs to loop press L\n");
+                printf("You want your songs to not loop press S\n");
                 scanf_s("%c", &option);
                 if (option == 'L' || option == 'l') 
                 {
