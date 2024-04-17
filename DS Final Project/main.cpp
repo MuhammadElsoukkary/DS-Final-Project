@@ -315,7 +315,7 @@ int main(void) {
         case 1:
             freeList(playlist);
             roundPlaylist = NULL;
-            Queue* playlist = InitializeQueue();       // Initializing Queue and setting the queue as the playlist
+            playlist = NULL;
             printf("New playlist created. You can now add songs.\n");
             break;
         case 2:
