@@ -410,6 +410,8 @@ int main(void) {
         case 2:
             addFile(&playlist, &roundPlaylist, "C:\\Users\\muham\\source\\repos\\DS-Final-Project\\AudioDB\\Dark.wav");
             addFile(&playlist, &roundPlaylist, "C:\\Users\\muham\\source\\repos\\DS-Final-Project\\AudioDB\\randomsound.wav");
+            addFile(&playlist, &roundPlaylist, "C:\\Users\\muham\\source\\repos\\DS-Final-Project\\AudioDB\\large-underwater-explosion-190270.wav");
+
             printf("Songs added to the playlist.\n");
             break;
         case 3:
