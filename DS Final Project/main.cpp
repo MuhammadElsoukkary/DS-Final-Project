@@ -64,6 +64,7 @@ MusicPlayer* InitializeHashTable(void);
 void InsertWithOverWrite(MusicPlayer* hashTable, char* songname, char* artist);
 char* SearchWithOverWriteInCaseOfCollisionTechnique(MusicPlayer* hashTable, char* songname);
 void FreeHashTable(MusicPlayer* hashTable);
+void freeStack(Stack* stack);
 
 struct Node* CreateNewNode(const wchar_t* filename) {
     struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
@@ -415,6 +416,22 @@ void printCircularList(struct Node* head)
     } while (current != head);
 }
 
+void freeStack(Stack* stack) {
+    if (stack == NULL) {
+        return; // If the stack pointer is NULL, there's nothing to free
+    }
+
+    // Pop all elements from the stack to ensure all memory is freed
+    while (!isEmpty(stack)) {
+        struct Node* node = pop(stack);
+        free(node); // Free the memory allocated for the node
+    }
+
+ 
+     free(stack);
+}
+
+
 int main(void) {
     struct Node* playlist = NULL;
     struct CircularLinkedList* roundPlaylist = NULL;
@@ -433,7 +450,7 @@ int main(void) {
         printf("3: Play playlist\n");
         printf("4: Print the lists\n");
         printf("5: Search For Artist of Song\n");
-        printf("6: Delete playlist\n");
+        printf("6: Delete playlist and other structs \n");
         printf("7: Exit\n");
         printf("Enter your choice: ");
         scanf_s("%d", &userInput, sizeof(userInput));
@@ -517,11 +534,13 @@ int main(void) {
         case 6:
             freeList(playlist);
             FreeHashTable(hashtable);
+            freeStack(&stack);
             printf("Playlist deleted.\n");
             break;
         case 7:
             FreeHashTable(hashtable);
             freeList(playlist);
+            freeStack(&stack);
             exit(EXIT_SUCCESS);
         default:
             printf("Invalid option. Please try again.\n");
