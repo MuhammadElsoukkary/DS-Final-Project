@@ -63,6 +63,7 @@ MusicPlayerArtistSong* InitializeKeyValuePair(char* songname, char* artist);
 MusicPlayer* InitializeHashTable(void);
 void InsertWithOverWrite(MusicPlayer* hashTable, char* songname, char* artist);
 char* SearchWithOverWriteInCaseOfCollisionTechnique(MusicPlayer* hashTable, char* songname);
+void FreeHashTable(MusicPlayer* hashTable);
 
 struct Node* CreateNewNode(const wchar_t* filename) {
     struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
@@ -341,6 +342,25 @@ char* SearchWithOverWriteInCaseOfCollisionTechnique(MusicPlayer* hashTable, char
     return nullptr; // Return nullptr if the key is not found in the table
 }
 
+void FreeHashTable(MusicPlayer* hashTable) {
+    if (hashTable == NULL) {
+        return;
+    }
+
+    for (int i = 0; i < TABLE; i++) {
+        MusicPlayerArtistSong* current = hashTable->Table[i];
+        while (current != NULL) {
+            MusicPlayerArtistSong* temp = current;
+            current = current->NextArtistSongPair;
+            free(temp->songName);
+            free(temp->artistName);
+            free(temp);
+        }
+    }
+
+    free(hashTable);
+}
+
 
 void freeList(struct Node* head) {
     struct Node* current = head;
@@ -496,10 +516,11 @@ int main(void) {
           
         case 6:
             freeList(playlist);
-
+            FreeHashTable(hashtable);
             printf("Playlist deleted.\n");
             break;
         case 7:
+            FreeHashTable(hashtable);
             freeList(playlist);
             exit(EXIT_SUCCESS);
         default:
