@@ -327,18 +327,19 @@ char* SearchWithOverWriteInCaseOfCollisionTechnique(MusicPlayer* hashTable, char
     int hash = GenerateHash(songname);
 
     if (hashTable->Table[hash] == NULL) {
-        printf("ERROR: cannot find the Key in the table!");
-        return 0;
+        return nullptr; // Return nullptr if the key is not found in the table
     }
 
     MusicPlayerArtistSong* current = hashTable->Table[hash];
-    if (current->songName == songname) {
-        return current->artistName;
+    while (current != nullptr) {
+        if (strcmp(current->songName, songname) == 0) {
+            return current->artistName;
+        }
+        current = current->NextArtistSongPair;
     }
-    printf("ERROR: cannot find the Key in the table!");
-    return 0;
-}
 
+    return nullptr; // Return nullptr if the key is not found in the table
+}
 
 
 void freeList(struct Node* head) {
@@ -428,17 +429,19 @@ int main(void) {
             addFile(&playlist, &roundPlaylist, "C:\\Users\\muham\\source\\repos\\DS-Final-Project\\AudioDB\\Dark.wav");
             addFile(&playlist, &roundPlaylist, "C:\\Users\\muham\\source\\repos\\DS-Final-Project\\AudioDB\\randomsound.wav");
             addFile(&playlist, &roundPlaylist, "C:\\Users\\muham\\source\\repos\\DS-Final-Project\\AudioDB\\large-underwater-explosion-190270.wav");
-            
+
             inputSong = (char*)malloc(MAXFILENAMESIZE * sizeof(char));
             inpuptArtist = (char*)malloc(MAXFILENAMESIZE * sizeof(char));
-            
-            printf("Enter the name of the song: ");
-            fgets(inputSong, 100, stdin);  
-            printf("Enter the name of the artist: ");
-            fgets(inpuptArtist, 100, stdin);
+
+            std::cout << "Enter the name of the song: ";
+            std::cin.ignore();
+            std::cin.getline(inputSong, MAXFILENAMESIZE);
+            std::cout << "Enter the name of the artist: ";
+            std::cin.ignore();
+            std::cin.getline(inpuptArtist, MAXFILENAMESIZE);
             InsertWithOverWrite(hashtable, inputSong, inpuptArtist);
 
-            printf("Songs added to the playlist.\n");
+            std::cout << "Songs added to the playlist.\n";
             break;
         case 3:
             if (playlist == NULL) {
@@ -475,12 +478,18 @@ int main(void) {
             printCircularList(makeCircular(&playlist));
 
         case 5:
-          
+            inputSong = (char*)malloc(MAXFILENAMESIZE * sizeof(char));
             char* artist;
-            printf("What is the name of the song you are looking for?");
-            scanf_s("%s", &inputSong);
+            std::cout << "What is the name of the song you are looking for? " << std::endl;
+            std::cin.ignore();
+            std::cin.getline(inputSong, MAXFILENAMESIZE);
             artist = SearchWithOverWriteInCaseOfCollisionTechnique(hashtable, inputSong);
-            printf("The song %s is made by :%s", inputSong, artist);
+            if (artist != nullptr) {
+                std::cout << "The song " << inputSong << " is made by: " << artist << std::endl;
+            }
+            else {
+                std::cout << "Song not found in the table." << std::endl;
+            }
             break;
           
         case 6:
