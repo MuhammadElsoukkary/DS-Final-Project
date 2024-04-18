@@ -416,7 +416,7 @@ int main(void) {
         printf("6: Delete playlist\n");
         printf("7: Exit\n");
         printf("Enter your choice: ");
-        scanf_s("%d", &userInput);
+        scanf_s("%d", &userInput, sizeof(userInput));
 
         switch (userInput) {
         case 1:
@@ -476,6 +476,8 @@ int main(void) {
 
             printList(playlist);
             printCircularList(makeCircular(&playlist));
+
+            break;
 
         case 5:
             inputSong = (char*)malloc(MAXFILENAMESIZE * sizeof(char));
