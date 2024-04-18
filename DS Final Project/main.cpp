@@ -52,7 +52,7 @@ struct Node* CreateNewNode(const wchar_t* filename);
 void EnQueue(Queue* queue, const wchar_t* filename);
 void addFile(struct Node** headRef, struct CircularLinkedList** circularHeadRef, const char* filename);
 void play(struct Node* linkedList, Stack* stack);
-void freeList(struct Node* head);
+
 bool isEmpty(Stack* stack);
 struct Node* pop(Stack* stack);
 void push(Stack* stack, struct Node* node);
@@ -65,7 +65,7 @@ void InsertWithOverWrite(MusicPlayer* hashTable, char* songname, char* artist);
 char* SearchWithOverWriteInCaseOfCollisionTechnique(MusicPlayer* hashTable, char* songname);
 void FreeHashTable(MusicPlayer* hashTable);
 void freeStack(Stack* stack);
-
+void freeList(struct Node** headRef);
 struct Node* CreateNewNode(const wchar_t* filename) {
     struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
     if (newNode == NULL) {
@@ -362,15 +362,21 @@ void FreeHashTable(MusicPlayer* hashTable) {
     free(hashTable);
 }
 
+void freeList(struct Node** headRef) {
+    if (headRef == NULL || *headRef == NULL) {
+        return; // Nothing to free
+    }
 
-void freeList(struct Node* head) {
-    struct Node* current = head;
+    struct Node* current = *headRef;
     while (current != NULL) {
         struct Node* temp = current;
         current = current->next;
         free(temp);
     }
+
+    *headRef = NULL; // Prevent dangling pointer
 }
+
 
 bool isEmpty(Stack* stack) {
     return stack->top == -1;
@@ -416,20 +422,7 @@ void printCircularList(struct Node* head)
     } while (current != head);
 }
 
-void freeStack(Stack* stack) {
-    if (stack == NULL) {
-        return; // If the stack pointer is NULL, there's nothing to free
-    }
 
-    // Pop all elements from the stack to ensure all memory is freed
-    while (!isEmpty(stack)) {
-        struct Node* node = pop(stack);
-        free(node); // Free the memory allocated for the node
-    }
-
- 
-     free(stack);
-}
 
 
 int main(void) {
@@ -457,7 +450,7 @@ int main(void) {
 
         switch (userInput) {
         case 1:
-            freeList(playlist);
+            freeList(&playlist);
             playlist = NULL;
             roundPlaylist = NULL;
             printf("New playlist created. You can now add songs.\n");
@@ -532,16 +525,18 @@ int main(void) {
             break;
           
         case 6:
-            freeList(playlist);
+            freeList(&playlist);
             FreeHashTable(hashtable);
-            freeStack(&stack);
+            
+           
             printf("Playlist deleted.\n");
             break;
         case 7:
             FreeHashTable(hashtable);
-            freeList(playlist);
-            freeStack(&stack);
+           
+            freeList(&playlist); 
             exit(EXIT_SUCCESS);
+
         default:
             printf("Invalid option. Please try again.\n");
         }
