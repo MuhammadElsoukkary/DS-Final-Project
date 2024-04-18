@@ -2,11 +2,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 #include <Windows.h>
 #include <conio.h>
 #include <wchar.h>
 
 const int MAXFILENAMESIZE = 256;
+#define TABLE 10
 
 struct Node {
     wchar_t filename[MAXFILENAMESIZE];
@@ -33,8 +35,8 @@ struct CircularLinkedList {
 };
 
 typedef struct MusicPlayerArtistSong {
-    int songId;
-    char* artistName[50];
+    char* songName;
+    char* artistName;
     struct MusicPlayerArtistSong* NextArtistSongPair;
 } MusicPlayerArtistSong;
 
@@ -55,11 +57,11 @@ struct Node* pop(Stack* stack);
 void push(Stack* stack, struct Node* node);
 void printList(struct Node* head);
 void printCircularList(struct CircularLinkedList* head);
-int GenerateHash(int studentid);
-MusicPlayerArtistSong* InitializeKeyValuePair(int songid, char* artist[50]);
+int GenerateHash(char* songname);
+MusicPlayerArtistSong* InitializeKeyValuePair(char* songname, char* artist);
 MusicPlayer* InitializeHashTable(void);
-void InsertWithOverWrite(MusicPlayer* hashTable, int songid, char* artist[50]);
-char* SearchWithOverWriteInCaseOfCollisionTechnique(MusicPlayer* hashTable, int songid);
+void InsertWithOverWrite(MusicPlayer* hashTable, char* songname, char* artist);
+char* SearchWithOverWriteInCaseOfCollisionTechnique(MusicPlayer* hashTable, char* songname);
 
 struct Node* CreateNewNode(const wchar_t* filename) {
     struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
@@ -268,26 +270,25 @@ void playCircular(struct Node* head, Stack* stack) {
 }
 
 
-
-int GenerateHash(int studentid) {
+int GenerateHash(char* songname) {
     int hash = 0;
-
-    int asciiValue = studentid;
-    hash = (hash + asciiValue) % 10;
-
+    for (int i = 0; songname[i] != '\0'; i++) {
+        int asciiValue = songname[i];
+        hash = (hash + asciiValue) % TABLE;
+    }
     return hash;
 }
 
 //initializes the pair of the ID and Artist
-MusicPlayerArtistSong* InitializeKeyValuePair(int songid, char* artist[50]) {
+MusicPlayerArtistSong* InitializeKeyValuePair(char* songname, char* artist) {
     MusicPlayerArtistSong* kvp = (MusicPlayerArtistSong*)malloc(sizeof(MusicPlayerArtistSong));
     if (kvp == NULL) {
         printf("EOM");
         exit(EXIT_FAILURE);
     }
 
-    kvp->songId = songid;
-    kvp->artistName[50] = artist[50];
+    kvp->songName = _strdup(songname);
+    kvp->artistName = _strdup(artist);
     kvp->NextArtistSongPair = NULL;
     return kvp;
 }
@@ -306,9 +307,9 @@ MusicPlayer* InitializeHashTable(void) {
     return hashTable;
 }
 
-void InsertWithOverWrite(MusicPlayer* hashTable, int songid, char* artist[50]) {
-    MusicPlayerArtistSong* kvp = InitializeKeyValuePair(songid, artist);
-    int hash = GenerateHash(songid);
+void InsertWithOverWrite(MusicPlayer* hashTable, char* songname, char* artist) {
+    MusicPlayerArtistSong* kvp = InitializeKeyValuePair(songname, artist);
+    int hash = GenerateHash(songname);
 
     if (hashTable->Table[hash] == NULL) { //no collisions since the bucket is empty
         hashTable->Table[hash] = kvp;
@@ -321,8 +322,8 @@ void InsertWithOverWrite(MusicPlayer* hashTable, int songid, char* artist[50]) {
     hashTable->Table[hash] = kvp;
 }
 
-char* SearchWithOverWriteInCaseOfCollisionTechnique(MusicPlayer* hashTable, int songid) {
-    int hash = GenerateHash(songid);
+char* SearchWithOverWriteInCaseOfCollisionTechnique(MusicPlayer* hashTable, char* songname) {
+    int hash = GenerateHash(songname);
 
     if (hashTable->Table[hash] == NULL) {
         printf("ERROR: cannot find the Key in the table!");
@@ -330,8 +331,8 @@ char* SearchWithOverWriteInCaseOfCollisionTechnique(MusicPlayer* hashTable, int 
     }
 
     MusicPlayerArtistSong* current = hashTable->Table[hash];
-    if (current->songId == songid) {
-        return current->artistName[50];
+    if (current->songName == songname) {
+        return current->artistName;
     }
     printf("ERROR: cannot find the Key in the table!");
     return 0;
@@ -399,6 +400,9 @@ int main(void) {
     stack.top = -1; // Initialize stack
     int userInput = 0;
     char option = 'A';
+    char* inputSong;
+    char* inpuptArtist;
+    MusicPlayer* hashtable = InitializeHashTable();
 
     printf("Welcome to the music player 1050\n");
     while (true) {
@@ -406,8 +410,9 @@ int main(void) {
         printf("2: Add song to the playlist\n");
         printf("3: Play playlist\n");
         printf("4: Print the lists\n");
-        printf("5: Delete playlist\n");
-        printf("6: Exit\n");
+        printf("5: Search For Artist of Song\n");
+        printf("6: Delete playlist\n");
+        printf("7: Exit\n");
         printf("Enter your choice: ");
         scanf_s("%d", &userInput);
 
@@ -422,6 +427,15 @@ int main(void) {
             addFile(&playlist, &roundPlaylist, "C:\\Users\\muham\\source\\repos\\DS-Final-Project\\AudioDB\\Dark.wav");
             addFile(&playlist, &roundPlaylist, "C:\\Users\\muham\\source\\repos\\DS-Final-Project\\AudioDB\\randomsound.wav");
             addFile(&playlist, &roundPlaylist, "C:\\Users\\muham\\source\\repos\\DS-Final-Project\\AudioDB\\large-underwater-explosion-190270.wav");
+            
+            inputSong = (char*)malloc(MAXFILENAMESIZE * sizeof(char));
+            inpuptArtist = (char*)malloc(MAXFILENAMESIZE * sizeof(char));
+            
+            printf("Enter the name of the song: ");
+            scanf_s("%s", &inputSong);
+            printf("Enter the name of the artist: ");
+            scanf_s("%s", &inpuptArtist);
+            InsertWithOverWrite(hashtable, inputSong, inpuptArtist);
 
             printf("Songs added to the playlist.\n");
             break;
@@ -451,8 +465,6 @@ int main(void) {
                  
                 }
 
-
-
             }
             break;
 
@@ -461,14 +473,21 @@ int main(void) {
             printList(playlist);
             printCircularList(makeCircular(&playlist));
 
-            
         case 5:
-
+          
+            char* artist;
+            printf("What is the name of the song you are looking for?");
+            scanf_s("%s", &inputSong);
+            artist = SearchWithOverWriteInCaseOfCollisionTechnique(hashtable, inputSong);
+            printf("The song %s is made by :%s", inputSong, artist);
+            break;
+          
+        case 6:
             freeList(playlist);
-            
+
             printf("Playlist deleted.\n");
             break;
-        case 6:
+        case 7:
             freeList(playlist);
             exit(EXIT_SUCCESS);
         default:
