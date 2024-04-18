@@ -1,5 +1,6 @@
 
 #include <stdio.h>
+#include <iostream>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
@@ -432,9 +433,9 @@ int main(void) {
             inpuptArtist = (char*)malloc(MAXFILENAMESIZE * sizeof(char));
             
             printf("Enter the name of the song: ");
-            scanf_s("%s", &inputSong);
+            fgets(inputSong, 100, stdin);  
             printf("Enter the name of the artist: ");
-            scanf_s("%s", &inpuptArtist);
+            fgets(inpuptArtist, 100, stdin);
             InsertWithOverWrite(hashtable, inputSong, inpuptArtist);
 
             printf("Songs added to the playlist.\n");
